@@ -14,14 +14,13 @@ namespace CoreLibrary.Context
 
     using CoreLibrary.Interfaces;
 
-    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Storage;
 
     /// <summary>
     /// Base Context Class.
     /// </summary>
-    public class BaseContext : IdentityDbContext, IUnitOfWork
+    public class BaseContext : DbContext, IUnitOfWork
     {
         /// <summary>
         /// Inicia uma nova instância da classe <see cref="BaseContext" />.
