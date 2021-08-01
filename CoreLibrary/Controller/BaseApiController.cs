@@ -14,6 +14,7 @@
 
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Storage;
 
     /// <summary>
     /// Controle base para APIs.
@@ -39,11 +40,11 @@
         /// <param name="serviceAsync"></param>
         /// <param name="mapper"></param>
         public BaseApiController
-            (
+        (
             IUnitOfWork context,
             IBaseServiceAsync<TEntity> serviceAsync,
             IMapper mapper
-            )
+        )
         {
             _unitOfWork = context;
             _serviceAsync = serviceAsync;
@@ -61,12 +62,14 @@
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<ActionResult> SearchAll()
         {
-            var entityList = await _serviceAsync.GetAllItemsAsync();
+            IEnumerable<TEntity>? entityList = await _serviceAsync.GetAllItemsAsync();
 
             if (!entityList.Any())
+            {
                 return NotFound("Não foram encontrados itens no banco de dados.");
+            }
 
-            var entityListViewModels =
+            List<TViewModel>? entityListViewModels =
                 _mapper.Map<IEnumerable<TEntity>, List<TViewModel>>(entityList);
 
             return entityListViewModels == null
@@ -87,14 +90,18 @@
         public async Task<ActionResult> Search(Guid id)
         {
             if (id == Guid.Empty)
+            {
                 return BadRequest();
+            }
 
-            var entity = await _serviceAsync.GetItemAsync(id);
+            TEntity? entity = await _serviceAsync.GetItemAsync(id);
 
             if (entity is null)
+            {
                 return NotFound();
+            }
 
-            var entityViewModel = _mapper.Map<TEntity, TViewModel>(entity);
+            TViewModel? entityViewModel = _mapper.Map<TEntity, TViewModel>(entity);
 
             return entityViewModel == null
                 ? NotFound()
@@ -115,18 +122,25 @@
         public async Task<IActionResult> Update(Guid id, TViewModel entityViewModel)
         {
             if (id == Guid.Empty)
+            {
                 return BadRequest();
+            }
 
-            if (id != entityViewModel.Id) return BadRequest();
+            if (id != entityViewModel.Id)
+            {
+                return BadRequest();
+            }
 
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            using (IDbContextTransaction? transaction = await _unitOfWork.BeginTransactionAsync())
             {
                 try
                 {
-                    var entity = _mapper.Map<TViewModel, TEntity>(entityViewModel);
+                    TEntity? entity = _mapper.Map<TViewModel, TEntity>(entityViewModel);
 
                     if (entity is null)
+                    {
                         return UnprocessableEntity();
+                    }
 
                     _ = await _serviceAsync.UpdateItem(id, entity);
                     await _unitOfWork.CommitTransactionAsync(transaction);
@@ -134,9 +148,13 @@
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!await EntityExists(id))
+                    {
                         return NotFound();
+                    }
                     else
+                    {
                         throw;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -161,17 +179,21 @@
         [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
         public async Task<IActionResult> Add(TViewModel entityViewModel)
         {
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            using (IDbContextTransaction? transaction = await _unitOfWork.BeginTransactionAsync())
             {
                 try
                 {
                     if (await EntityExists(entityViewModel.Id))
+                    {
                         return Unauthorized();
+                    }
 
-                    var entity = _mapper.Map<TViewModel, TEntity>(entityViewModel);
+                    TEntity? entity = _mapper.Map<TViewModel, TEntity>(entityViewModel);
 
                     if (entity is null)
+                    {
                         return UnprocessableEntity();
+                    }
 
                     _ = await _serviceAsync.AddItemAsync(entity);
                     await _unitOfWork.CommitTransactionAsync(transaction);
@@ -199,16 +221,20 @@
         public async Task<ActionResult> Remove(Guid id)
         {
             if (id == Guid.Empty)
+            {
                 return BadRequest();
+            }
 
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            using (IDbContextTransaction? transaction = await _unitOfWork.BeginTransactionAsync())
             {
                 try
                 {
-                    var entity = await _serviceAsync.GetItemAsync(id);
+                    TEntity? entity = await _serviceAsync.GetItemAsync(id);
 
                     if (entity is null)
+                    {
                         return NotFound();
+                    }
 
                     _serviceAsync.DeleteItem(entity);
                     await _unitOfWork.CommitTransactionAsync(transaction);
@@ -227,11 +253,11 @@
 
         private async Task<bool> EntityExists(Guid id)
         {
-            return (
-                await _serviceAsync
+            return (await _serviceAsync
                 .GetAllItemsAsync()
                 .ConfigureAwait(false)
-                ).ToList().Any(e => e.Id == id);
+                ).ToList()
+                .Any(e => e.Id == id);
         }
     }
 }

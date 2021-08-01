@@ -55,7 +55,9 @@ namespace CoreLibrary.Context
         public IDbContextTransaction BeginTransaction()
         {
             if (CurrentTransaction != null)
+            {
                 return CurrentTransaction;
+            }
 
             CurrentTransaction = Database.BeginTransaction(IsolationLevel.ReadCommitted);
 
@@ -66,7 +68,9 @@ namespace CoreLibrary.Context
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
             if (CurrentTransaction != null)
+            {
                 return CurrentTransaction;
+            }
 
             CurrentTransaction = await Database.BeginTransactionAsync(IsolationLevel.ReadCommitted).ConfigureAwait(true);
 
@@ -77,17 +81,23 @@ namespace CoreLibrary.Context
         public void CommitTransaction(IDbContextTransaction transaction)
         {
             if (transaction == null)
+            {
                 throw new ArgumentNullException(nameof(transaction));
+            }
 
             if (transaction != CurrentTransaction)
+            {
                 throw new InvalidOperationException($"Transação {transaction.TransactionId} não é a atual.");
+            }
 
             try
             {
                 bool isObjectSaved = SaveEntities();
 
                 if (isObjectSaved)
+                {
                     transaction.Commit();
+                }
             }
             catch (Exception ex)
             {

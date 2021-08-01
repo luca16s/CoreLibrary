@@ -30,7 +30,7 @@ namespace CoreLibrary.Models
                 return false;
             }
 
-            var other = (ValueObject)obj;
+            ValueObject? other = (ValueObject)obj;
 
             return this.GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
         }
