@@ -84,7 +84,7 @@
         /// <returns>
         /// Resultado da requisição.
         /// </returns>
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         public async Task<ActionResult> Search(Guid id)
