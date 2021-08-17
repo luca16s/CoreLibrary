@@ -9,12 +9,15 @@ namespace CoreLibrary.Context
 {
     using System;
     using System.Data;
+    using System.Diagnostics;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
     using CoreLibrary.Interfaces;
 
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.ChangeTracking;
     using Microsoft.EntityFrameworkCore.Storage;
 
     /// <summary>
@@ -87,7 +90,7 @@ namespace CoreLibrary.Context
 
             if (transaction != CurrentTransaction)
             {
-                throw new InvalidOperationException($"Transação {transaction.TransactionId} não é a atual.");
+                throw new InvalidOperationException($"Transação {transaction?.TransactionId} não é a atual.");
             }
 
             try
@@ -101,6 +104,14 @@ namespace CoreLibrary.Context
             }
             catch (Exception ex)
             {
+                foreach (EntityEntry entry in ChangeTracker.Entries().Where(e => e?.State != EntityState.Unchanged))
+                {
+                    foreach (Microsoft.EntityFrameworkCore.Metadata.IProperty prop in entry.CurrentValues.Properties)
+                    {
+                        var val = prop?.PropertyInfo?.GetValue(entry?.Entity);
+                        Debug.WriteLine($"{prop} ~ ({val?.ToString()?.Length})({val})");
+                    }
+                }
                 RollbackTransaction();
                 throw new DbUpdateException(ex.Message);
             }
@@ -124,7 +135,7 @@ namespace CoreLibrary.Context
 
             if (transaction != CurrentTransaction)
             {
-                throw new InvalidOperationException($"Transação {transaction.TransactionId} não é a atual.");
+                throw new InvalidOperationException($"Transação {transaction?.TransactionId} não é a atual.");
             }
 
             try
@@ -138,8 +149,17 @@ namespace CoreLibrary.Context
             }
             catch (Exception ex)
             {
+                foreach (EntityEntry entry in ChangeTracker.Entries().Where(e => e?.State != EntityState.Unchanged))
+                {
+                    foreach (Microsoft.EntityFrameworkCore.Metadata.IProperty prop in entry.CurrentValues.Properties)
+                    {
+                        var val = prop?.PropertyInfo?.GetValue(entry?.Entity);
+                        Debug.WriteLine($"{prop} ~ ({val?.ToString()?.Length})({val})");
+                    }
+                }
+
                 RollbackTransaction();
-                throw new DataException(ex.Message);
+                throw new DbUpdateException(ex.Message);
             }
             finally
             {
