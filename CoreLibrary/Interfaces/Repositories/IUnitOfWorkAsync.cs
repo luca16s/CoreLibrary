@@ -1,17 +1,16 @@
-﻿// <copyright file="IUnitOfWork.cs" company="Îakaré Software'oka">
+﻿// <copyright file="IUnitOfWorkAsync.cs" company="Îakaré Software'oka">
 //     Copyright (c) Îakaré Software'oka. All rights reserved. Licensed under the MIT license. See
 //     LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace CoreLibrary.Interfaces
+namespace CoreLibrary.Interfaces.Repositories
 {
-
     using Microsoft.EntityFrameworkCore.Storage;
 
     /// <summary>
     /// Classe para servir de interface no salvamento do banco de dados.
     /// </summary>
-    public interface IUnitOfWork
+    public interface IUnitOfWorkAsync
     {
         /// <summary>
         /// Inicia transação com o banco de dados.
@@ -19,7 +18,7 @@ namespace CoreLibrary.Interfaces
         /// <returns>
         /// Retorna a transação.
         /// </returns>
-        IDbContextTransaction BeginTransaction();
+        Task<IDbContextTransaction> BeginTransactionAsync();
 
         /// <summary>
         /// Comita a transação do banco.
@@ -27,7 +26,10 @@ namespace CoreLibrary.Interfaces
         /// <param name="transaction">
         /// Transação aberta.
         /// </param>
-        void CommitTransaction(IDbContextTransaction transaction);
+        /// <returns>
+        /// Retorna a task.
+        /// </returns>
+        Task CommitTransactionAsync(IDbContextTransaction transaction);
 
         /// <summary>
         /// Reverte alterações.

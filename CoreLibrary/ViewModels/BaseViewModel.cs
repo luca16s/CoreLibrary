@@ -1,6 +1,5 @@
 ﻿namespace CoreLibrary.ViewModels
 {
-
     using System;
 
     using Microsoft.AspNetCore.Mvc;

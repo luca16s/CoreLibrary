@@ -9,6 +9,7 @@
     using AutoMapper;
 
     using CoreLibrary.Interfaces;
+    using CoreLibrary.Interfaces.Repositories;
     using CoreLibrary.Models;
     using CoreLibrary.ViewModels;
 
@@ -30,18 +31,18 @@
         where TViewModel : BaseViewModel
     {
         private readonly IMapper _mapper;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWorkAsync _unitOfWork;
         private readonly IBaseServiceAsync<TEntity> _serviceAsync;
 
         /// <summary>
-        ///
+        /// Inicia uma nova instância da classe <see cref="BaseApiController{TEntity, TViewModel}" />.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="serviceAsync"></param>
         /// <param name="mapper"></param>
         public BaseApiController
         (
-            IUnitOfWork context,
+            IUnitOfWorkAsync context,
             IBaseServiceAsync<TEntity> serviceAsync,
             IMapper mapper
         )
@@ -60,7 +61,7 @@
         [HttpGet]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> SearchAll()
+        public virtual async Task<ActionResult> SearchAll()
         {
             IEnumerable<TEntity>? entityList = await _serviceAsync.GetAllItemsAsync();
 
@@ -87,7 +88,7 @@
         [HttpGet("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> Search(Guid id)
+        public virtual async Task<ActionResult> Search(Guid id)
         {
             if (id == Guid.Empty)
             {
@@ -119,7 +120,7 @@
         [HttpPut("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.UnprocessableEntity)]
-        public async Task<IActionResult> Update(Guid id, TViewModel entityViewModel)
+        public virtual async Task<IActionResult> Update(Guid id, TViewModel entityViewModel)
         {
             if (id == Guid.Empty)
             {
@@ -181,7 +182,7 @@
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.UnprocessableEntity)]
         [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-        public async Task<IActionResult> Add(TViewModel entityViewModel)
+        public virtual async Task<IActionResult> Add(TViewModel entityViewModel)
         {
             using (IDbContextTransaction? transaction = await _unitOfWork.BeginTransactionAsync())
             {
@@ -226,7 +227,7 @@
         /// Resultado da requisição.
         /// </returns>
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Remove(Guid id)
+        public virtual async Task<ActionResult> Remove(Guid id)
         {
             if (id == Guid.Empty)
             {
