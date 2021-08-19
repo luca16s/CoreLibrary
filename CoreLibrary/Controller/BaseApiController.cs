@@ -142,7 +142,11 @@
                         return UnprocessableEntity();
                     }
 
-                    _ = await _serviceAsync.UpdateItem(id, entity);
+                    if (await _serviceAsync.UpdateItem(id, entity) is null)
+                    {
+                        _unitOfWork.RollbackTransaction();
+                    }
+
                     await _unitOfWork.CommitTransactionAsync(transaction);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -195,7 +199,11 @@
                         return UnprocessableEntity();
                     }
 
-                    _ = await _serviceAsync.AddItemAsync(entity);
+                    if (await _serviceAsync.AddItemAsync(entity) is null)
+                    {
+                        _unitOfWork.RollbackTransaction();
+                    }
+
                     await _unitOfWork.CommitTransactionAsync(transaction);
                 }
                 catch (Exception ex)
@@ -237,6 +245,7 @@
                     }
 
                     _serviceAsync.DeleteItem(entity);
+
                     await _unitOfWork.CommitTransactionAsync(transaction);
                 }
                 catch (Exception ex)
